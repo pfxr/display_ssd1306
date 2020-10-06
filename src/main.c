@@ -2,7 +2,6 @@
 #include <avr/pgmspace.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <util/delay.h>
 #include <avr/interrupt.h>
 #include "usi_i2c_master.h"
 #include "display.h"

@@ -1,18 +1,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <avr/io.h>
-#include <util/delay.h>
 
 // Defines
 #define TWI_FAST_MODE
 
-#ifdef TWI_FAST_MODE                 // TWI FAST mode timing limits. SCL = 100-400kHz
-#define DELAY_T2TWI (_delay_us(2))   // >1.3us
-#define DELAY_T4TWI (_delay_us(1))   // >0.6us
-#else                                // TWI STANDARD mode timing limits. SCL <= 100kHz
-#define DELAY_T2TWI (_delay_us(5))   // >4.7us
-#define DELAY_T4TWI (_delay_us(4))   // >4.0us
-#endif
+
 
 #define TWI_NACK_BIT 0 // Bit position for (N)ACK bit.
 #define PIN_USI_SCL PB2

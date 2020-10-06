@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <avr/io.h>
-#include <util/delay.h>
 #include "usi_i2c_master.h"
 
 // Constants
@@ -33,14 +32,11 @@ uint8_t I2Ctransfer (uint8_t data) {
          1<<USICS1 | 0<<USICS0 | 1<<USICLK |  // Software clock strobe as source.
          1<<USITC;                            // Toggle Clock Port.
   do {
-    DELAY_T2TWI;
     USICR = data;                       // Generate positive SCL edge.
     while (!(PINB & 1<<PIN_USI_SCL));   // Wait for SCL to go high.
-    DELAY_T4TWI;
     USICR = data;                       // Generate negative SCL edge.
   } while (!(USISR & 1<<USIOIF));       // Check for transfer complete.
 
-  DELAY_T2TWI;
   data = USIDR;                         // Read out data.
   USIDR = 0xFF;                         // Release SDA.
   DDRB |= (1<<PIN_USI_SDA);             // Enable SDA as output.
@@ -103,15 +99,9 @@ uint8_t I2Cstart (uint8_t address, int readWrite) {
   /* Release SCL to ensure that (repeated) Start can be performed */
   PORTB |= 1<<PIN_USI_SCL;              // Release SCL.
   while (!(PINB & 1<<PIN_USI_SCL));     // Verify that SCL becomes high.
-#ifdef TWI_FAST_MODE
-  DELAY_T4TWI;
-#else
-  DELAY_T2TWI;
-#endif
 
   /* Generate Start Condition */
   PORTB &= ~(1<<PIN_USI_SDA);      // Force SDA LOW.
-  DELAY_T4TWI;
   PORTB &= ~(1<<PIN_USI_SCL);      // Pull SCL LOW.
   PORTB |= 1<<PIN_USI_SDA;         // Release SDA.
 
@@ -137,7 +127,5 @@ void I2Cstop (void) {
   PORTB &= ~(1<<PIN_USI_SDA);              // Pull SDA low.
   PORTB |= 1<<PIN_USI_SCL;              // Release SCL.
   while (!(PINB & 1<<PIN_USI_SCL));     // Wait for SCL to go high.
-  DELAY_T4TWI;
   PORTB |= 1<<PIN_USI_SDA;                 // Release SDA.
-  DELAY_T2TWI;
 }
