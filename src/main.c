@@ -11,7 +11,7 @@
 uint8_t displayAddress = 0x00;
 
 void setup(){
-  UARTinit();
+  UARTinit(9600);
   I2Cinit();
 
   /*Interrupts*/

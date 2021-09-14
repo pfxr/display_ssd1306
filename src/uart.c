@@ -33,34 +33,41 @@ static void disable_pcint(){
 
 // Interrupt handling
 // Timer0
-ISR (TIM0_COMPA_vect){
-
-  if(tx_data){                     //means that there is something to send (stop_bit alone is enough)
-     PORTB = (tx_data & 0x01) ? 
-             PORTB | (1<<TX_PIN) : //set   TX_PIN 
-             PORTB &~(1<<TX_PIN) ; //unset TX_PIN
-    tx_data = tx_data >> 1;
+ISR (TIM0_COMPA_vect) {
+  if(!receiving && !sending){ 
+    disable_timer0();
   } else {
-    if(!receiving){                //not receiving or sending
-      disable_timer0();
-      sending = 0;
-    } else {                       //receiving
-      if(rx_cnt == 8){
-        if(PINB & RX_PIN){         //Stop bit
+
+    // TX process
+    if(sending) {
+      if(tx_data) { //means that there is something to send (stop_bit alone is enough)
+        PORTB = (tx_data & 0x01) ? 
+               PORTB | (1<<TX_PIN) : //set   TX_PIN 
+               PORTB &~(1<<TX_PIN) ; //unset TX_PIN
+        tx_data = tx_data >> 1;
+      } else { // Nothing else to send
+        sending = 0;
+      }
+    }
+
+    // RX Process
+    if(receiving) {                      
+      if(rx_cnt == 8) {
+        // Check for stop bit
+        if(PINB & RX_PIN) { 
           receiving = 0;
-          disable_timer0();
           enable_pcint();
           UARTwrite(rx_data);
         } 
         rx_cnt = 0;
-      } else {                    //LSB 1st
+        // Receive Data bits (LSB first)
+      } else {    
         rx_data  = rx_data >> 1;
         rx_data |= (PINB & (1<<RX_PIN)) ? 0x80 : 0;
         rx_cnt++;
       }
     }
   } 
-
 }
 
 // PCINT interrupt
@@ -92,7 +99,7 @@ uint8_t UARTread(uint8_t *data){
 
 }
 
-void UARTinit(){
+void UARTinit(uint32_t baud){
   //Timer0 initialization
   //fck/8 prescaler = 1MHz
   TCCR0B |= (1<<CS01); //Enable timer0
@@ -101,10 +108,10 @@ void UARTinit(){
   TCCR0A = (1<<WGM01);
   TIMSK |= (1<<OCIE0A);
   
-  // Tclk = 1us
-  // Baud rate 9600bps
-  // T9600 = 104.16us
-  OCR0A = 103;
+  // Tclk = 125ns
+  // Baud rate bps
+  // T115200 = 8.6us
+  OCR0A = 104; 
 
   /*IO configuration*/
   //RX = PCINT3 interrupt enable
