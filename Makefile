@@ -13,6 +13,7 @@ OBJECTS=$(foreach c_file, $(SRC_FILES), $(c_file:.c=.o))
 
 MMCU=attiny85
 FCPU=8000000UL
+COM=/dev/ttyUSB0
 
 default: compile upload
 
@@ -33,7 +34,7 @@ compile: $(OBJECTS)
 	${CP} --no-change-warnings -j .fuse --change-section-lma .fuse=0 -O ihex $(BIN)/display.elf $(BIN)/display.fuse
 
 upload:
-	avrdude -b 19200 -c avrisp -P /dev/ttyUSB0 -p t85 -U flash:w:$(BIN)/display.hex
+	avrdude -b 19200 -c avrisp -P $(COM) -p t85 -U flash:w:$(BIN)/display.hex
 
 fuses:
-	avrdude -b 19200 -c avrisp -P /dev/ttyUSB0 -p t85 -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m 
+	avrdude -b 19200 -c avrisp -P $(COM) -p t85 -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m 
