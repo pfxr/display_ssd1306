@@ -15,11 +15,14 @@ MMCU=attiny85
 FCPU=8000000UL
 COM=/dev/ttyUSB0
 
-default: compile upload
+default: image.h compile upload
 
 clean:
 	rm -rf src/*.o
 	rm -rf bin
+
+image.h: memory.py
+	python3 memory.py
 
 %.o : %.c
 	$(CC) -Wall -mmcu=$(MMCU) -DF_CPU=$(FCPU) -g -c $< -o $@
