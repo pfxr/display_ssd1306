@@ -57,9 +57,8 @@ ISR (TIM0_COMPA_vect) {
         if(PINB & RX_PIN) { 
           receiving = 0;
           enable_pcint();
-          UARTwrite(rx_data);
+          rx_cnt = 0;
         } 
-        rx_cnt = 0;
         // Receive Data bits (LSB first)
       } else {    
         rx_data  = rx_data >> 1;
@@ -83,7 +82,6 @@ ISR(PCINT0_vect){
 void UARTsendstr(char *str){
   while(*str != '\0'){
     UARTwrite(*str);
-    while(sending);
     str++;
   }
   UARTwrite('\n');
@@ -93,10 +91,21 @@ void UARTwrite(char c){
   sending = 1;
   tx_data = (1<<9) | (c<<1); //stop_bit | c | start_bit
   enable_timer0();
+  while(sending);
 }
 
 uint8_t UARTread(uint8_t *data){
-
+  if (receiving) {
+    return 0;
+  } else {
+    if (rx_data == 0x00) {
+      return 0;
+    } else {
+      *data = rx_data;
+      rx_data = 0x00;
+      return 1;
+    }
+  }
 }
 
 void UARTinit(uint32_t baud){
